@@ -224,7 +224,7 @@ boolean processPump()
   if(!process_flags.pump_enabled) return false;
   if(isDark())
   {
-      Serial.println("Is dark. Pump will be to noisy");
+      Serial.println("Is too dark. The pump will be to noisy.");
       return false;
   }
   if(process_flags.pump_is_on)

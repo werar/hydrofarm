@@ -222,7 +222,7 @@ int turnPumpOn()
 boolean processPump()
 {
   if(!process_flags.pump_enabled) return false;
-  if(isDark==true)
+  if(isDark())
   {
       Serial.println("Is dark. Pump will be to noisy");
       return false;
@@ -256,7 +256,7 @@ boolean isDark()
   #if LIGHT_SENSOR_MODULE
   /*** If the night is comming to avoid running noisy pump lets disable it. What if some lamp will be enabled or a day will be quite dark. This is not perfect solution*/
   connected_sensors.digital_light_sensor=digitalRead(LIGHT_SENSOR_PIN);
-  if(connected_sensors.digital_light_sensor==1)
+  if(connected_sensors.digital_light_sensor==0)
   {
     return false;
   }else

@@ -1,7 +1,11 @@
 #include <Arduino.h>
-#include <SerialCommand.h>
 #ifndef UNIT_TEST  // IMPORTANT LINE!
 #include "hydrofarm.h"
+#include "pump.h"
+#include "serialConsole.h"
+
+
+
 
 /**
  * Software to control small hydrophonics farm
@@ -13,54 +17,6 @@
  * TODO: mono switch enabling pump (manual mode)
  */
 
-#define DEBUG_ON
-/**
- * Select what module should be supported
- */
-#define RTC_MODULE 0 //
-#define TM1637_MODULE 1 //
-#define NRF_MODULE 1//
-#define WATER_FLOW_MODULE 0//
-#define LIGHT_SENSOR_MODULE 1//
-
-#if NRF_MODULE
-  #define MY_DEBUG
-  #define MY_RADIO_NRF24
-  #define MY_TRANSPORT_WAIT_READY_MS 3000 ///try to connect 3sec if no sucess continue the loop
-  #include <MySensors.h>
-  #define CHILD_ID_FOR_PUMP_RELAY 1
-  #define CHILD_ID_FOR_WATER_METER 2
-  #define PUMP_STATUS 0
-  MyMessage pumpMsg(CHILD_ID_FOR_PUMP_RELAY,V_STATUS);
-  //MyMessage waterSensorMsg(CHILD_ID_FOR_WATER_METER,V_LIGHT);
-
-  void presentation()
-  {
-  // Send the sketch version information to the gateway and Controller
-  sendSketchInfo("Hydrophonics farm", "0.1");
-  // Register this device as Waterflow sensor
-  present(CHILD_ID_FOR_PUMP_RELAY, S_BINARY);
-  //present(CHILD_ID_FOR_WATER_METER,S_LIGHT);
-  }
-
-  int sendStatusesViaNRF()
-  {
-    //TODO implement that
-    //send(volumeMsg.set(volume, 3));
-    return -1;
-  }
-
-  void receive(const MyMessage &message)
-  {
-    // We only expect one type of message from controller. But we better check anyway.
-    if (message.type==V_STATUS) //TODO: if more  binary signals will be check here also CHILD_ID_FOR_PUMP_RELAY
-    {
-      // This way of switching pump is independed on main pumpProcess. For next period of time it will go as usual.
-      // What if we will try to implement scheduler. This will not allow
-      message.getBool()?turnPumpOn():turnPumpOff();
-    }
-  }
-#endif
 
 #if TM1637_MODULE
   #include <TM1637Display.h>
@@ -80,6 +36,11 @@
   }
 #endif
 
+#if NRF_MODULE
+#include "nrf.h"
+#include <MySensors.h>
+MyMessage pumpMsg(CHILD_ID_FOR_PUMP_RELAY,V_STATUS);
+#endif
 
 #if WATER_FLOW_MODULE
   volatile int NbTopsFan; //measuring the rising edges of the signal
@@ -98,124 +59,20 @@ void calculateWaterFlowRPM()
 }
 #endif
 
-#ifdef DEBUG_ON
-  #define DEBUG_PRINT(x)   Serial.print(x)
-  #define DEBUG_PRINTLN(x) Serial.println(x)
-#else
-  #define DEBUG_PRINT(x)
-  #define DEBUG_PRINTLN(x)
-#endif
 
-#define PUMP_MOTOR_PIN 7
+
 #define PERIOD_TO_RUN_PROCESS_MANAGER 1000 //in ms
 unsigned long last_run_pm=0;
 unsigned long period_to_turn_pump_on=120000;
 unsigned long period_to_turn_pump_off=7200000;
 unsigned long last_pump_status_change=0;
-#define RELAY_ON 0
-#define RELAY_OFF 1
+
 unsigned long current_time;
 
-#if LIGHT_SENSOR_MODULE
-  #define LIGHT_SENSOR_PIN 5
-#endif
-
-SerialCommand sCmd;
-
-void setOnTime() {
-  unsigned long secounds;
-  char *arg;
-  Serial.println("Changing pump ON time");
-  arg = sCmd.next();
-  if (arg != NULL) {
-    secounds = atol(arg);    // Converts a char string to an integer
-    Serial.print("Set to: ");
-    Serial.println(secounds);
-    period_to_turn_pump_on=secounds*1000;
-  }
-  else {
-    Serial.println("No arguments");
-  }
-}
-
-void setOffTime() {
-  unsigned long seconds;
-  char *arg;
-  Serial.println("Changing pump OFF time");
-  arg = sCmd.next();
-  if (arg != NULL) {
-    seconds = atol(arg);    // Converts a char string to an lon
-    Serial.print("Set to: ");
-    Serial.println(seconds);
-    period_to_turn_pump_off=seconds*1000;
-    Serial.println(period_to_turn_pump_off);
-  }
-  else {
-    Serial.println("No arguments");
-  }
-}
-
-void disablePump()
-{
-  Serial.println("Pump is disabled");
-  process_flags.pump_enabled=false;
-}
-void enablePump()
-{
-  Serial.println("Pump is enabled");
-  process_flags.pump_enabled=true;
-}
-
-void showStatus()
-{
-  if(process_flags.pump_is_on==true)
-  {
-    Serial.print("The pump is on time to disabe it:");
-  }else
-  {
-    Serial.print("The pump is off time to enable it:");
-  }
-  Serial.println((last_pump_status_change+(process_flags.pump_is_on?period_to_turn_pump_on:period_to_turn_pump_off)-current_time)/1000);
-}
- // This gets set as the default handler, and gets called when no other command matches.
-void unrecognized(const char *command) {
-  Serial.println("Supported commands:");
-  Serial.println("disable_pump (d), enable_pump (e), status (s), pump_on (on), pump_of (off), set_on_time [sec], set_off_time [sec]");
-}
-
-void pushToTurnPumpOff()
-{
-  turnPumpOff();
-}
-
-void pushToTurnPumpOn()
-{
-  turnPumpOn();
-}
+process_flags_type process_flags;
+sensors_type connected_sensors;
 
 
-int turnPumpOff()
-{
-  digitalWrite(PUMP_MOTOR_PIN, RELAY_OFF);
-  Serial.println("Pump is off");
-  #if NRF_MODULE
-    send(pumpMsg.setSensor(CHILD_ID_FOR_PUMP_RELAY).set(false), false); //TODO: check that
-  #endif
-  return 0;
-}
-
-/**
-*
-*/
-int turnPumpOn()
-{
-  digitalWrite(PUMP_MOTOR_PIN, RELAY_ON);
-  Serial.println("Pump is on");
-  #if NRF_MODULE
-    send(pumpMsg.setSensor(CHILD_ID_FOR_PUMP_RELAY).set(true), false); //TODO: check that
-  #endif
-  return 0;
-}
 /**
 
 */
@@ -306,24 +163,7 @@ void setup()
   process_flags.pump_enabled=true;
   turnPumpOff();
   process_flags.pump_is_on=false;
-  //examples: https://github.com/kroimon/Arduino-SerialCommand/blob/master/examples/SerialCommandExample/SerialCommandExample.pde
-  sCmd.addCommand("disable_pump", disablePump);
-  sCmd.addCommand("d", disablePump);
-  sCmd.addCommand("enable_pump",  enablePump);
-  //TODO below
-  sCmd.addCommand("pump_on", pushToTurnPumpOn);
-  sCmd.addCommand("on", pushToTurnPumpOn);
-  sCmd.addCommand("pump_off", pushToTurnPumpOff);
-  sCmd.addCommand("off", pushToTurnPumpOff);
 
-  sCmd.addCommand("e",  enablePump);
-  sCmd.addCommand("status",  showStatus);
-  sCmd.addCommand("s",  showStatus);
-
-  sCmd.addCommand("set_on_time",  setOnTime);
-  sCmd.addCommand("set_off_time",  setOffTime);
-
-  sCmd.setDefaultHandler(unrecognized);
 }
 
 void loop()
@@ -339,7 +179,7 @@ void loop()
     calculateWaterFlowRPM();
   #endif
   #if NRF_MODULE
-    sendStatusesViaNRF();
+    //sendStatusesViaNRF();
   #endif
 }
 #endif

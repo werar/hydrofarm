@@ -1,4 +1,3 @@
-
 #include <Arduino.h>
 #include "hydrofarm.h"
 #include "pump.h"
@@ -9,13 +8,16 @@ void disablePump()
   Serial.println("Pump is disabled");
   process_flags.pump_enabled=false;
 }
+
 void enablePump()
 {
   Serial.println("Pump is enabled");
   process_flags.pump_enabled=true;
 }
 
-
+/**
+*
+*/
 int turnPumpOff()
 {
   digitalWrite(PUMP_MOTOR_PIN, RELAY_OFF);
@@ -25,7 +27,6 @@ int turnPumpOff()
   #endif
   return 0;
 }
-
 
 /**
 *

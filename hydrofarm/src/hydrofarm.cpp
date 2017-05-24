@@ -4,9 +4,6 @@
 #include "pump.h"
 #include "serialConsole.h"
 
-
-
-
 /**
  * Software to control small hydrophonics farm
  *
@@ -16,7 +13,6 @@
  * TODO: Implement event handlers like desribed here: https://arobenko.gitbooks.io/bare_metal_cpp/content/basic_concepts/event_loop.html
  * TODO: mono switch enabling pump (manual mode)
  */
-
 
 #if TM1637_MODULE
   #include <TM1637Display.h>
@@ -43,23 +39,8 @@ MyMessage pumpMsg(CHILD_ID_FOR_PUMP_RELAY,V_STATUS);
 #endif
 
 #if WATER_FLOW_MODULE
-  volatile int NbTopsFan; //measuring the rising edges of the signal
-  #define WATER_FLOW_PIN 6
-  void rpm ()     //This is the function that the interupt calls
-{
-  NbTopsFan++;  //This function measures the rising and falling edge of the hall effect sensors signal
-}
-void calculateWaterFlowRPM()
-{
-  NbTopsFan = 0;   //Set NbTops to 0 ready for calculations
-  sei();      //Enables interrupts
-  delay (1000);   //Wait 1 second
-  cli();      //Disable interrupts
-  Calc = (NbTopsFan * 60 / 73); //(Pulse frequency x 60) / 73Q, = flow rate
-}
+#include "waterFlow.h"
 #endif
-
-
 
 #define PERIOD_TO_RUN_PROCESS_MANAGER 1000 //in ms
 unsigned long last_run_pm=0;
@@ -71,7 +52,6 @@ unsigned long current_time;
 
 process_flags_type process_flags;
 sensors_type connected_sensors;
-
 
 /**
 
@@ -130,6 +110,12 @@ int processManager()
   //DEBUG_PRINTLN(F("in process Manager"));
   //pump manager
   processPump();
+  #if WATER_FLOW_MODULE
+  calculateWaterFlowRate();
+  #endif
+  #if NRF_MODULE
+    //sendStatusesViaNRF();
+  #endif
   return 0;
 }
 
@@ -154,15 +140,15 @@ void setup()
   #endif
 
   #if WATER_FLOW_MODULE
-    pinMode(WATER_FLOW_PIN, INPUT); //initializes digital pin 2 as an input initialised,
-    attachInterrupt(0, rpm, RISING); //and the interrupt is attached
-    /***
-    TODO implement that. Using delay is not a perfect solution.
-    */
+  initWaterFlow();
   #endif
+
+  addSerialCommands();
+
   process_flags.pump_enabled=true;
   turnPumpOff();
   process_flags.pump_is_on=false;
+
 
 }
 
@@ -175,11 +161,5 @@ void loop()
     processManager();
   }
   sCmd.readSerial();
-  #if WATER_FLOW_MODULE
-    calculateWaterFlowRPM();
-  #endif
-  #if NRF_MODULE
-    //sendStatusesViaNRF();
-  #endif
 }
 #endif

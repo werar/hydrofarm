@@ -23,8 +23,6 @@ void unrecognized(const char *command) {
   Serial.println("disable_pump (d), enable_pump (e), status (s), pump_on (on), pump_of (off), set_on_time [sec], set_off_time [sec]");
 }
 
-
-
 void pushToTurnPumpOn()
 {
   turnPumpOn();
@@ -34,7 +32,6 @@ void pushToTurnPumpOff()
 {
   turnPumpOff();
 }
-
 
 void setOnTime() {
   unsigned long secounds;

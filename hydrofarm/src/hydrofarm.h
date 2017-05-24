@@ -1,18 +1,14 @@
 #ifndef HYDROFARM_H_
 #define HYDROFARM_H_
 
-
 /**
  * Select what module should be supported
  */
 #define RTC_MODULE 0 //
 #define TM1637_MODULE 1 //
 #define NRF_MODULE 1//
-#define WATER_FLOW_MODULE 0//
+#define WATER_FLOW_MODULE 1//
 #define LIGHT_SENSOR_MODULE 1//
-
-
-
 
 #define DEBUG_ON
 
@@ -36,9 +32,6 @@ extern unsigned long period_to_turn_pump_on;
 extern unsigned long period_to_turn_pump_off;
 extern unsigned long last_pump_status_change;
 extern unsigned long current_time;
-
-
-
 
 /**
 Main idea is to use process flags as semaphores to know what is just working and what is not
@@ -64,10 +57,6 @@ int turnPumpOn();
 int turnPumpOff();
 bool processPump();
 bool isDark();
-
-
-
-
 
 void unrecognized(const char *command);
 void LED_on();

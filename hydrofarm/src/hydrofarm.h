@@ -27,6 +27,8 @@
 #define RELAY_ON 0
 #define RELAY_OFF 1
 
+#define PERIOD_TO_RUN_PROCESS_MANAGER 1000 //in ms
+
 //
 extern unsigned long period_to_turn_pump_on;
 extern unsigned long period_to_turn_pump_off;
@@ -47,11 +49,17 @@ typedef struct sensors_type
 {
       int external_temperature;
       int digital_light_sensor;
-} ;
+};
+
+//TODO: move all timers related varabiles here
+typedef struct timers_type
+{
+      unsigned long count_to_show_reports=60;
+      unsigned long counter_to_show_reports;
+};
 
 extern process_flags_type process_flags;
 extern sensors_type connected_sensors;
-
 
 int turnPumpOn();
 int turnPumpOff();

@@ -3,6 +3,7 @@
 #include "serialConsole.h"
 #include "hydrofarm.h"
 #include "pump.h"
+#include "waterFlow.h"
 
 SerialCommand sCmd;
 
@@ -11,11 +12,15 @@ void showStatus()
   if(process_flags.pump_is_on==true)
   {
     Serial.print("The pump is on time to disabe it:");
+    Serial.println((last_pump_status_change+(process_flags.pump_is_on?period_to_turn_pump_on:period_to_turn_pump_off)-current_time)/1000);
+    calculateWaterFlowRate();
   }else
   {
     Serial.print("The pump is off time to enable it:");
+    Serial.println((last_pump_status_change+(process_flags.pump_is_on?period_to_turn_pump_on:period_to_turn_pump_off)-current_time)/1000);
   }
-  Serial.println((last_pump_status_change+(process_flags.pump_is_on?period_to_turn_pump_on:period_to_turn_pump_off)-current_time)/1000);
+
+
 }
  // This gets set as the default handler, and gets called when no other command matches.
 void unrecognized(const char *command) {

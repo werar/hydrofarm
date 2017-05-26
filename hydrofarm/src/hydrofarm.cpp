@@ -36,13 +36,16 @@
 #include "nrf.h"
 #include <MySensors.h>
 MyMessage pumpMsg(CHILD_ID_FOR_PUMP_RELAY,V_STATUS);
+
+
+
 #endif
 
 #if WATER_FLOW_MODULE
 #include "waterFlow.h"
 #endif
 
-#define PERIOD_TO_RUN_PROCESS_MANAGER 1000 //in ms
+
 unsigned long last_run_pm=0;
 unsigned long period_to_turn_pump_on=120000;
 unsigned long period_to_turn_pump_off=7200000;
@@ -52,6 +55,7 @@ unsigned long current_time;
 
 process_flags_type process_flags;
 sensors_type connected_sensors;
+timers_type timers;
 
 /**
 
@@ -111,7 +115,16 @@ int processManager()
   //pump manager
   processPump();
   #if WATER_FLOW_MODULE
-  calculateWaterFlowRate();
+  if(timers.counter_to_show_reports==0)
+  {
+      calculateWaterFlowRate();
+      timers.counter_to_show_reports=timers.count_to_show_reports;
+
+  }else
+  {
+      timers.counter_to_show_reports--;
+  }
+
   #endif
   #if NRF_MODULE
     //sendStatusesViaNRF();
@@ -148,6 +161,8 @@ void setup()
   process_flags.pump_enabled=true;
   turnPumpOff();
   process_flags.pump_is_on=false;
+
+  timers.counter_to_show_reports=timers.count_to_show_reports;
 
 
 }

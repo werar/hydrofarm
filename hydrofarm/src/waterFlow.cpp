@@ -12,7 +12,6 @@ const unsigned long period = 1000;
 void MeterISR() {
   // let our flow meter count the pulses
   Meter.count();
-  Serial.println("in interrupt");
 }
 
 void initWaterFlow()
@@ -23,7 +22,6 @@ attachInterrupt(INT1, MeterISR, RISING);
 // sometimes initializing the gear generates some pulses that we should ignore
 Meter.reset();
 }
-
 
 
 void calculateWaterFlowRate()

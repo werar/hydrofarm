@@ -4,6 +4,7 @@
 #include "hydrofarm.h"
 #include "pump.h"
 #include "waterFlow.h"
+#include "config.h"
 
 SerialCommand sCmd;
 
@@ -12,12 +13,12 @@ void showStatus()
   if(process_flags.pump_is_on==true)
   {
     Serial.print("The pump is on time to disabe it:");
-    Serial.println((last_pump_status_change+(process_flags.pump_is_on?period_to_turn_pump_on:period_to_turn_pump_off)-current_time)/1000);
+    Serial.println((last_pump_status_change+(process_flags.pump_is_on?config.period_to_turn_pump_on:config.period_to_turn_pump_off)-current_time)/1000);
     calculateWaterFlowRate();
   }else
   {
     Serial.print("The pump is off time to enable it:");
-    Serial.println((last_pump_status_change+(process_flags.pump_is_on?period_to_turn_pump_on:period_to_turn_pump_off)-current_time)/1000);
+    Serial.println((last_pump_status_change+(process_flags.pump_is_on?config.period_to_turn_pump_on:config.period_to_turn_pump_off)-current_time)/1000);
   }
 
 
@@ -47,7 +48,8 @@ void setOnTime() {
     secounds = atol(arg);    // Converts a char string to an integer
     Serial.print("Set to: ");
     Serial.println(secounds);
-    period_to_turn_pump_on=secounds*1000;
+    config.period_to_turn_pump_on=secounds*1000;
+    //TODO update eeprom
   }
   else {
     Serial.println("No arguments");
@@ -63,8 +65,9 @@ void setOffTime() {
     seconds = atol(arg);    // Converts a char string to an lon
     Serial.print("Set to: ");
     Serial.println(seconds);
-    period_to_turn_pump_off=seconds*1000;
-    Serial.println(period_to_turn_pump_off);
+    config.period_to_turn_pump_off=seconds*1000;
+    //TODO save config
+    Serial.println(config.period_to_turn_pump_off);
   }
   else {
     Serial.println("No arguments");

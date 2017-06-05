@@ -10,6 +10,10 @@
 #define WATER_FLOW_MODULE 1//
 #define LIGHT_SENSOR_MODULE 1//
 
+
+#define PERIOD_TO_RUN_PROCESS_MANAGER 1000 //in ms
+#define PERIOD_TO_SHOW_SERIAL_REPORTS 60
+
 #define DEBUG_ON
 
 #ifdef DEBUG_ON
@@ -27,11 +31,11 @@
 #define RELAY_ON 0
 #define RELAY_OFF 1
 
-#define PERIOD_TO_RUN_PROCESS_MANAGER 1000 //in ms
+
 
 //
-extern unsigned long period_to_turn_pump_on;
-extern unsigned long period_to_turn_pump_off;
+//extern unsigned long period_to_turn_pump_on;
+//extern unsigned long period_to_turn_pump_off;
 extern unsigned long last_pump_status_change;
 extern unsigned long current_time;
 
@@ -54,7 +58,7 @@ typedef struct sensors_type
 //TODO: move all timers related varabiles here
 typedef struct timers_type
 {
-      unsigned long count_to_show_reports=60;
+      unsigned long count_to_show_reports=PERIOD_TO_SHOW_SERIAL_REPORTS;
       unsigned long counter_to_show_reports;
 };
 

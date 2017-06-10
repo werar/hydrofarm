@@ -5,7 +5,7 @@
 #define CONFIG_H_
 
 
-#define PERIOD_TO_TURN_PUMP_ON 120000 //in millis
+#define PERIOD_TO_TURN_PUMP_ON 180000 //in millis
 #define PERIOD_TO_TURN_PUMP_OFF 14400000 //in millis
 
 

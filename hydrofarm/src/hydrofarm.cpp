@@ -147,7 +147,7 @@ void setup()
   Serial.begin(9600); //for BLUETOOTH HC6
   //Serial.println("AT+BAUD8"); //http://42bots.com/tutorials/hc-06-bluetooth-module-datasheet-and-configuration-with-arduino/
   //Serial.begin(115200);
-  load_config();
+  load_default_config(); //load_config(); //TODO: add mechanism writtin settings via serial console
   pinMode(PUMP_MOTOR_PIN, OUTPUT);
   cleanProcessFlags();
   #if TM1637_MODULE

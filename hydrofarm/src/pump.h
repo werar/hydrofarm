@@ -1,7 +1,7 @@
 #ifndef PUMP_H_
 #define PUMP_H_
 
-#define PUMP_MOTOR_PIN 7
+#define PUMP_MOTOR_PIN 8
 
 
 extern void disablePump();

@@ -20,8 +20,6 @@ void showStatus()
     Serial.print("The pump is off time to enable it:");
     Serial.println((last_pump_status_change+(process_flags.pump_is_on?config.period_to_turn_pump_on:config.period_to_turn_pump_off)-current_time)/1000);
   }
-
-
 }
  // This gets set as the default handler, and gets called when no other command matches.
 void unrecognized(const char *command) {

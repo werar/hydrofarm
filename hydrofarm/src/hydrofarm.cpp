@@ -23,7 +23,6 @@
   #define CLK A2
   #define DIO A3
   TM1637Display display(CLK, DIO);
-
   void show_time_on_LED(int value)
   {
     //display.showNumberDecEx(0, (0x80 >> k), true);
@@ -39,37 +38,35 @@
 #include "nrf.h"
 #include <MySensors.h>
 MyMessage pumpMsg(CHILD_ID_FOR_PUMP_RELAY,V_STATUS);
-
-
-
 #endif
 
 #if WATER_FLOW_MODULE
 #include "waterFlow.h"
 #endif
 
+#if SOIL_MODULE
+#include "soil.h"
+#endif
 
 unsigned long last_run_pm=0;
 //unsigned long period_to_turn_pump_on=PERIOD_TO_TURN_PUMP_ON;
 //unsigned long period_to_turn_pump_off=PERIOD_TO_TURN_PUMP_OFF;
 unsigned long last_pump_status_change=0;
-
 unsigned long current_time;
 
 process_flags_type process_flags;
 sensors_type connected_sensors;
 timers_type timers;
 
-
 /**
-
+The pump can be
+//TODO: consider situation to have more than one pump
 */
 boolean processPump()
 {
   if(!process_flags.pump_enabled) return false;
   if(isDark())
   {
-      Serial.println("Is too dark. The pump will be to noisy.");
       return false;
   }
   if(process_flags.pump_is_on)
@@ -118,24 +115,43 @@ int processManager()
   //DEBUG_PRINTLN(F("in process Manager"));
   //pump manager
   processPump();
-  #if WATER_FLOW_MODULE
-  if(timers.counter_to_show_reports==0)
-  {
-      calculateWaterFlowRate();
-      timers.counter_to_show_reports=timers.count_to_show_reports;
-
-  }else
-  {
-      timers.counter_to_show_reports--;
-  }
-
+  #if SOIL_MODULE
+  processSoil();
   #endif
+  processReports();
+
   #if NRF_MODULE
     //sendStatusesViaNRF();
   #endif
   return 0;
 }
+void processSoil()
+{
+  uint8_t soil_percentage=measureSoilPercentage();
+  connected_sensors.soil_percentage=soil_percentage;
+}
 
+void processReports()
+{
+  if(timers.counter_to_show_reports==0)
+  {
+    if(isDark())
+    {
+            Serial.println("Is too dark. The pump will be to noisy.");
+    }
+    #if WATER_FLOW_MODULE
+    calculateWaterFlowRate();
+    #endif
+    #if SOIL_MODULE
+    Serial.print("Measured soil percentage: ");
+    Serial.println(connected_sensors.soil_percentage);
+    #endif
+      timers.counter_to_show_reports=timers.count_to_show_reports;
+  }else
+  {
+      timers.counter_to_show_reports--;
+  }
+}
 
 void cleanProcessFlags()
 {
@@ -161,15 +177,15 @@ void setup()
   initWaterFlow();
   #endif
 
-  addSerialCommands();
+  #if SOIL_MODULE
+  initSoil();
+  #endif
 
+  addSerialCommands();
   process_flags.pump_enabled=true;
   turnPumpOff();
   process_flags.pump_is_on=false;
-
   timers.counter_to_show_reports=timers.count_to_show_reports;
-
-
 }
 
 void loop()

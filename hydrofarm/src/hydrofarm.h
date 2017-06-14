@@ -1,6 +1,8 @@
 #ifndef HYDROFARM_H_
 #define HYDROFARM_H_
 
+#include <avr/io.h>
+
 /**
  * Select what module should be supported
  */
@@ -9,6 +11,7 @@
 #define NRF_MODULE 1//
 #define WATER_FLOW_MODULE 1//
 #define LIGHT_SENSOR_MODULE 1//
+#define SOIL_MODULE 1//
 
 
 #define PERIOD_TO_RUN_PROCESS_MANAGER 1000 //in ms
@@ -53,6 +56,7 @@ typedef struct sensors_type
 {
       int external_temperature;
       int digital_light_sensor;
+      uint8_t soil_percentage;
 };
 
 //TODO: move all timers related varabiles here
@@ -69,6 +73,8 @@ int turnPumpOn();
 int turnPumpOff();
 bool processPump();
 bool isDark();
+void processSoil();
+void processReports();
 
 void unrecognized(const char *command);
 void LED_on();

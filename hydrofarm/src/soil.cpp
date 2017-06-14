@@ -58,15 +58,17 @@ uint8_t measureSoilPercentage() {
   soilMeasure(SOIL_POWER_2,SOIL_POWER_1,SOIL_AD_1);
   long read2= soil_average();
   long sensor1 = (read1 + read2)/2;
+  long soil_value = constrain(sensor1, MIN_RESISTANCE, MAX_RESISTANCE); //limit measured resistance
+  uint8_t soil_map = map(soil_value, MIN_RESISTANCE, MAX_RESISTANCE, 100, 0); //reverted MIN_RESISTANCE = 100%
   #ifdef MY_DEBUG
     Serial.print ("resistance bias =" );
     Serial.println (read1-read2);
     Serial.print ("sensor bias compensated value = ");
     Serial.println (sensor1);
+    Serial.print("Measured percentage:");
+    Serial.print(soil_map);
     Serial.println ();
   #endif
-  long soil_value = constrain(sensor1, MIN_RESISTANCE, MAX_RESISTANCE); //limit measured resistance
-  uint8_t soil_map = map(soil_value, MIN_RESISTANCE, MAX_RESISTANCE, 100, 0); //reverted MIN_RESISTANCE = 100%
   return soil_map;
 }
 

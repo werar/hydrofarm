@@ -34,8 +34,6 @@
 #define RELAY_ON 0
 #define RELAY_OFF 1
 
-
-
 //
 //extern unsigned long period_to_turn_pump_on;
 //extern unsigned long period_to_turn_pump_off;

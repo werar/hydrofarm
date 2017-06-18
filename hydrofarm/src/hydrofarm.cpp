@@ -139,7 +139,7 @@ void processReports()
   {
     if(isDark())
     {
-             PORTC ^= (1 << 0);
+      Serial.println("Is to dark");
     }
     #if WATER_FLOW_MODULE
     calculateWaterFlowRate();
@@ -147,6 +147,9 @@ void processReports()
     #if SOIL_MODULE
     Serial.print("Measured soil percentage: ");
     Serial.println(connected_sensors.soil_percentage);
+    #endif
+    #if NRF_MODULE
+    sendStatusesViaNRF();
     #endif
       timers.counter_to_show_reports=timers.count_to_show_reports;
   }else
@@ -174,7 +177,7 @@ void initTimers()
 
 ISR(TIMER1_COMPA_vect)
 {
-  PORTB ^= (1 << PB5);
+  PORTB ^= (1 << PB5); //bulit in led
 }
 
 void setup()

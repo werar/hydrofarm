@@ -1,19 +1,20 @@
 
 //#include "hydrofarm.h"
 #include "nrf.h"
-
-
-#if NRF_MODULE
+#include "hydrofarm.h"
+#include "soil.h"
 
   bool state = false;
   //MyMessage waterSensorMsg(CHILD_ID_FOR_WATER_METER,V_LIGHT);
 
+  MyMessage soilMsg(CHILD_ID_FOR_SOIL, V_HUM);
+
   void presentation()
   {
   // Send the sketch version information to the gateway and Controller
-  sendSketchInfo("Hydrophonics farm", "0.11");
-  // Register this device as Waterflow sensor
+  sendSketchInfo("Hydrophonics farm", "0.12");
   present(CHILD_ID_FOR_PUMP_RELAY, S_BINARY);
+  present(CHILD_ID_FOR_SOIL, S_HUM);
   //present(CHILD_ID_FOR_WATER_METER,S_LIGHT);
   }
 
@@ -21,7 +22,9 @@
   {
     //TODO implement that
     //send(volumeMsg.set(volume, 3));
-    return -1;
+    long soil=soil_average();
+    send(soilMsg.set((long int)ceil(soil)));
+    return 1;
   }
 
   void receive(const MyMessage &message)
@@ -54,10 +57,4 @@ void receive(const MyMessage &message)
   }
 }
 */
-
-
   }
-
-
-
-#endif

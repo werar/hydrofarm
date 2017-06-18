@@ -2,6 +2,7 @@
 #define HYDROFARM_H_
 
 #include <avr/io.h>
+#include <avr/interrupt.h>
 
 /**
  * Select what module should be supported

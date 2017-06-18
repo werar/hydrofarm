@@ -11,6 +11,7 @@
  * TODO: turn pump based on soil sensor state than cyclic mode
  * TODO: chnge function names convention _ _
  * TODO: enable/disable pump via NRF switch state
+ * TODO: use TIMEs for cyclic information
  * TODO: save in eeprom periods parameters
  * TODO: be sure that each process it turned on/off by.... either  flag or method. Why we need process manager is nrf is using directly turn pump on. Maybe better to have a singal/flag?
  * TODO: Implement event handlers like desribed here: https://arobenko.gitbooks.io/bare_metal_cpp/content/basic_concepts/event_loop.html
@@ -56,7 +57,8 @@ unsigned long current_time;
 
 process_flags_type process_flags;
 sensors_type connected_sensors;
-timers_type timers;
+volatile timers_type timers;
+
 
 /**
 The pump can be
@@ -137,7 +139,7 @@ void processReports()
   {
     if(isDark())
     {
-            Serial.println("Is too dark. The pump will be to noisy.");
+             PORTC ^= (1 << 0);
     }
     #if WATER_FLOW_MODULE
     calculateWaterFlowRate();
@@ -153,9 +155,26 @@ void processReports()
   }
 }
 
-void cleanProcessFlags()
+/***
+* TODO: move to common lib
+*/
+void initTimers()
 {
-  process_flags.pump_is_on=false;
+  cli();
+  TCCR1A = 0;
+  TCCR1B = 0;
+  TCNT1  = 0;
+
+  TCCR1A |= (1<<WGM12); //CTC mode timer1
+  TCCR1B |= (1<<CS12)|(1<<CS10); //prescalerclk/1024
+  OCR1A = 7812; //(target time) = (timer resolution) * (# timer counts + 1)
+  TIMSK1 |= (1<<OCIE1A);
+  sei();
+}
+
+ISR(TIMER1_COMPA_vect)
+{
+  PORTB ^= (1 << PB5);
 }
 
 void setup()
@@ -165,7 +184,7 @@ void setup()
   //Serial.begin(115200);
   load_default_config(); //load_config(); //TODO: add mechanism writtin settings via serial console
   pinMode(PUMP_MOTOR_PIN, OUTPUT);
-  cleanProcessFlags();
+  process_flags.pump_is_on=false;
   #if TM1637_MODULE
     display.setBrightness(0x0f);
   #endif
@@ -180,12 +199,15 @@ void setup()
   #if SOIL_MODULE
   initSoil();
   #endif
-
+  pinMode(13, OUTPUT);
   addSerialCommands();
   process_flags.pump_enabled=true;
   turnPumpOff();
   process_flags.pump_is_on=false;
   timers.counter_to_show_reports=timers.count_to_show_reports;
+
+  initTimers();
+
 }
 
 void loop()

@@ -12,7 +12,7 @@ void showStatus()
 {
   if(process_flags.pump_is_on==true)
   {
-    Serial.print("The pump is on time to disabe it:");
+    Serial.print("The pump is on time to disable it:");
     Serial.println((last_pump_status_change+(process_flags.pump_is_on?config.period_to_turn_pump_on:config.period_to_turn_pump_off)-current_time)/1000);
     calculateWaterFlowRate();
   }else

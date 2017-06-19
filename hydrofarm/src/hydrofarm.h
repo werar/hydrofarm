@@ -68,8 +68,7 @@ typedef struct timers_type
 extern process_flags_type process_flags;
 extern sensors_type connected_sensors;
 
-int turnPumpOn();
-int turnPumpOff();
+
 bool processPump();
 bool isDark();
 void processSoil();

@@ -11,13 +11,13 @@ SerialCommand sCmd;
 void showStatus()
 {
   if(process_flags.pump_is_on==true)
-  {
-    Serial.print("The pump is on time to disable it:");
+  { //TODO: the pump can be on even if pump_is_on is false -> if someone push directy pump on.
+    Serial.print("The pump is on. Time to disable it:");
     Serial.println((last_pump_status_change+(process_flags.pump_is_on?config.period_to_turn_pump_on:config.period_to_turn_pump_off)-current_time)/1000);
     calculateWaterFlowRate();
   }else
   {
-    Serial.print("The pump is off time to enable it:");
+    Serial.print("The pump is off. Time to enable it:");
     Serial.println((last_pump_status_change+(process_flags.pump_is_on?config.period_to_turn_pump_on:config.period_to_turn_pump_off)-current_time)/1000);
   }
 }

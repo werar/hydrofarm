@@ -7,5 +7,6 @@
 extern void disablePump();
 extern void enablePump();
 extern int turnPumpOff();
+extern int turnPumpOn();
 
 #endif

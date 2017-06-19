@@ -38,7 +38,6 @@
 #if NRF_MODULE
 #include "nrf.h"
 #include <MySensors.h>
-MyMessage pumpMsg(CHILD_ID_FOR_PUMP_RELAY,V_STATUS);
 #endif
 
 #if WATER_FLOW_MODULE
@@ -121,10 +120,6 @@ int processManager()
   processSoil();
   #endif
   processReports();
-
-  #if NRF_MODULE
-    //sendStatusesViaNRF();
-  #endif
   return 0;
 }
 void processSoil()

@@ -29,7 +29,7 @@
 #include <math.h>       // Conversion equation from resistance to %
 #include "soil.h"
 
-#define MY_DEBUG
+//#define MY_DEBUG
 
 int supplyVoltage;                /*!< Measured supply voltage */
 int sensorVoltage;                /*!< Measured sensor voltage */

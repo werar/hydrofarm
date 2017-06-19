@@ -3,11 +3,12 @@
 #include "nrf.h"
 #include "hydrofarm.h"
 #include "soil.h"
+#include "pump.h"
 
   bool state = false;
   //MyMessage waterSensorMsg(CHILD_ID_FOR_WATER_METER,V_LIGHT);
-
   MyMessage soilMsg(CHILD_ID_FOR_SOIL, V_HUM);
+  MyMessage pumpMsg(CHILD_ID_FOR_PUMP_RELAY,V_STATUS);
 
   void presentation()
   {
@@ -20,10 +21,8 @@
 
   int sendStatusesViaNRF()
   {
-    //TODO implement that
-    //send(volumeMsg.set(volume, 3));
-    uint8_t soil=measureSoilPercentage();
-    send(soilMsg.set((long int)ceil(soil)));
+    uint8_t soil_percentage=measureSoilPercentage();
+    send(soilMsg.set((long int)ceil(soil_percentage)));
     return 1;
   }
 
@@ -34,27 +33,6 @@
       // This way of switching pump is independed on main pumpProcess. For next period of time it will go as usual.
       // What if we will try to implement scheduler. This will not allow
       message.getBool()?turnPumpOn():turnPumpOff();
-      send(message.set(message.getBool()));
+      //send(message.set(message.getBool()));
     }
-
-/*
-void receive(const MyMessage &message)
-{
-  // We only react on status messages from the controller
-  // to this CHILD_ID.
-  if (message.type==V_STATUS  && message.sensor==CHILD_ID_FOR_PUMP_RELAY) {
-    // Change relay state
-    // Only switch if the state is new
-    if (message.getBool() != state) {
-      state = message.getBool();
-      // Change relay state
-      digitalWrite(RELAY_PIN, state?RELAY_ON:RELAY_OFF);
-      // Change LED state
-      digitalWrite(LED_PIN, state?LED_ON:LED_OFF);
-       // Send the current state
-      send(msg.set(state));
-    }
-  }
 }
-*/
-  }

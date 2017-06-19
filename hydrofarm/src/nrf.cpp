@@ -22,7 +22,7 @@
   {
     //TODO implement that
     //send(volumeMsg.set(volume, 3));
-    long soil=soil_average();
+    uint8_t soil=measureSoilPercentage();
     send(soilMsg.set((long int)ceil(soil)));
     return 1;
   }

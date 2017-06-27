@@ -18,6 +18,8 @@
 #define PERIOD_TO_RUN_PROCESS_MANAGER 1000 //in ms
 #define PERIOD_TO_SHOW_SERIAL_REPORTS 60
 #define MAX_WET_PERCENTAGE 100
+#define MAX_CYCLIC_BUFFERS 1
+#define CYCLIC_REPORT_SWITCH_REPORT_TIME 5
 
 #define DEBUG_ON
 
@@ -61,6 +63,9 @@ typedef struct timers_type
 {
       unsigned long count_to_show_reports=PERIOD_TO_SHOW_SERIAL_REPORTS;
       unsigned long counter_to_show_reports;
+      uint8_t current_cyclic_report=0;
+      uint8_t max_cyclic_reports=MAX_CYCLIC_BUFFERS;
+      uint32_t cyclic_report_counter=0;
 };
 
 extern process_flags_type process_flags;
@@ -71,7 +76,9 @@ bool isDark();
 bool isWet();
 void processSoil();
 void processReports();
-
+void show_time_on_LED(int value);
+void show_soil_percentage();
+void showReports();
 
 void unrecognized(const char *command);
 void LED_on();

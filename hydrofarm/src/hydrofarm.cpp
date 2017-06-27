@@ -3,37 +3,19 @@
 #include "hydrofarm.h"
 #include "pump.h"
 #include "serialConsole.h"
-#include "config.h"
+#include "eepromActions.h"
+#include "soil.h"
 
 /**
  * Software to control small hydrophonics farm
  *
  * TODO: turn pump based on soil sensor state than cyclic mode
  * TODO: chnge function names convention _ _
- * TODO: enable/disable pump via NRF switch state
- * TODO: use TIMEs for cyclic information
- * TODO: save in eeprom periods parameters
- * TODO: be sure that each process it turned on/off by.... either  flag or method. Why we need process manager is nrf is using directly turn pump on. Maybe better to have a singal/flag?
+ * TODO: fix bug with ont after restart
  * TODO: Implement event handlers like desribed here: https://arobenko.gitbooks.io/bare_metal_cpp/content/basic_concepts/event_loop.html
  * TODO:
  */
 
-#if TM1637_MODULE
-  #include <TM1637Display.h>
-  // Module connection pins (Digital Pins)
-  #define CLK A2
-  #define DIO A3
-  TM1637Display display(CLK, DIO);
-  void show_time_on_LED(int value)
-  {
-    //display.showNumberDecEx(0, (0x80 >> k), true);
-    if(value>9999)
-    {
-      value=value/60;
-    }
-    display.showNumberDec(value, false);
-  }
-#endif
 
 #if NRF_MODULE
 #include "nrf.h"
@@ -55,6 +37,56 @@ unsigned long current_time;
 process_flags_type process_flags;
 sensors_type connected_sensors;
 volatile timers_type timers;
+
+#if TM1637_MODULE
+  #include <TM1637Display.h>
+  // Module connection pins (Digital Pins)
+  #define CLK A2
+  #define DIO A3
+  TM1637Display display(CLK, DIO);
+
+  void show_report_on_LED()
+  {
+    if(timers.cyclic_report_counter>=CYCLIC_REPORT_SWITCH_REPORT_TIME)
+    {
+      if(timers.current_cyclic_report>=timers.max_cyclic_reports)
+      {
+        timers.current_cyclic_report=0;
+      }else
+      {
+        timers.current_cyclic_report++;
+      }
+      timers.cyclic_report_counter=0;
+    }
+    switch(timers.current_cyclic_report)
+    {
+      case 0:
+        show_time_on_LED((last_pump_status_change+(process_flags.pump_is_on?config_in_ram.period_to_turn_pump_on:config_in_ram.period_to_turn_pump_off)-current_time)/1000);
+        break;
+      case 1:
+        show_soil_percentage();
+        break;
+    }
+  }
+
+  void show_time_on_LED(int value)
+  {
+    //display.showNumberDecEx(0, (0x80 >> k), true);
+    if(value>9999)
+    {
+      value=value/60;
+    }
+    display.showNumberDec(value, false);
+  }
+  #if SOIL_MODULE
+  void show_soil_percentage()
+  {
+    uint8_t soil_percentage=measureSoilPercentage();
+    display.showNumberDec(soil_percentage, false);
+  }
+  #endif
+#endif
+
 
 /**
 The pump can be
@@ -90,8 +122,7 @@ boolean processPump()
     }
   }
   #if TM1637_MODULE
-    //DEBUG_PRINTLN((last_pump_status_change+(process_flags.pump_is_on?period_to_turn_pump_on:period_to_turn_pump_off)-current_time)/1000);
-    show_time_on_LED((last_pump_status_change+(process_flags.pump_is_on?config_in_ram.period_to_turn_pump_on:config_in_ram.period_to_turn_pump_off)-current_time)/1000);
+   show_report_on_LED();
   #endif
   return true;
 }
@@ -145,21 +176,7 @@ void processReports()
 {
   if(timers.counter_to_show_reports==0)
   {
-    if(isDark())
-    {
-      Serial.println("Is to dark");
-    }
-    if(isWet())
-    {
-      Serial.println("Is to wet");
-    }
-    #if WATER_FLOW_MODULE
-    calculateWaterFlowRate();
-    #endif
-    #if SOIL_MODULE
-    Serial.print("Measured soil percentage: ");
-    Serial.println(connected_sensors.soil_percentage);
-    #endif
+    showReports();
     #if NRF_MODULE
     sendStatusesViaNRF();
     #endif
@@ -168,6 +185,29 @@ void processReports()
   {
       timers.counter_to_show_reports--;
   }
+}
+
+void showReports()
+{
+  if(isDark())
+  {
+    Serial.println("Is to dark");
+  }
+  if(isWet())
+  {
+    Serial.println("Is to wet");
+  }
+  #if WATER_FLOW_MODULE
+  calculateWaterFlowRate();
+  #endif
+  #if SOIL_MODULE
+  uint8_t soil_percentage= measureSoilPercentage();
+  Serial.print("Soil % and average: ");
+  Serial.print(soil_percentage);
+  Serial.print("%, ");
+  long soil_avg = soil_average();
+  Serial.println(soil_avg);
+  #endif
 }
 
 /***
@@ -182,7 +222,7 @@ void initTimers()
 
   TCCR1A |= (1<<WGM12); //CTC mode timer1
   TCCR1B |= (1<<CS12)|(1<<CS10); //prescalerclk/1024
-  OCR1A = 7812; //(target time) = (timer resolution) * (# timer counts + 1)
+  OCR1A = 7812; //(target time) = (timer resolution) * (# timer counts + 1)  //TODO: not sure if that is 1 sec
   TIMSK1 |= (1<<OCIE1A);
   sei();
 }
@@ -190,14 +230,14 @@ void initTimers()
 ISR(TIMER1_COMPA_vect)
 {
   PORTB ^= (1 << PB5); //bulit in led
+  timers.cyclic_report_counter++;
 }
 
 void setup()
 {
-  Serial.begin(9600); //for BLUETOOTH HC6
+  Serial.begin(9600); //for BLUETOOTH HC6 //TODO set HC6 to use 115200
   //Serial.println("AT+BAUD8"); //http://42bots.com/tutorials/hc-06-bluetooth-module-datasheet-and-configuration-with-arduino/
   //Serial.begin(115200);
-
 
   pinMode(PUMP_MOTOR_PIN, OUTPUT);
   process_flags.pump_is_on=false;
@@ -218,7 +258,7 @@ void setup()
   pinMode(13, OUTPUT); //TODO magic number!
   addSerialCommands();
 
-  load_default_config();
+  load_default_config();  //TODO: use load_config after bug fix
   //load_config();
   //copy_eem_to_ram();
   Serial.println("Time off / Time on ");
@@ -229,7 +269,6 @@ void setup()
   process_flags.pump_is_on=false;
   timers.counter_to_show_reports=timers.count_to_show_reports;
   initTimers();
-
 }
 
 void loop()

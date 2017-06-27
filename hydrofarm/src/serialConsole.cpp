@@ -4,12 +4,12 @@
 #include "hydrofarm.h"
 #include "pump.h"
 #include "waterFlow.h"
-#include "config.h"
+#include "eepromActions.h"
 #include "soil.h"
 
 SerialCommand sCmd;
 
-void showStatus()
+void showStatus() //TODO: refactor that
 {
   if(process_flags.pump_is_on==true)
   { //TODO: the pump can be on even if pump_is_on is false -> if someone push directy pump on.

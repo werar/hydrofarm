@@ -9,7 +9,7 @@
  */
 #define RTC_MODULE 0 //
 #define TM1637_MODULE 1 //
-#define NRF_MODULE 1//
+#define NRF_MODULE 1//TODO: linker has problem when set to 0
 #define WATER_FLOW_MODULE 1//
 #define LIGHT_SENSOR_MODULE 1//
 #define SOIL_MODULE 1//
@@ -17,6 +17,7 @@
 
 #define PERIOD_TO_RUN_PROCESS_MANAGER 1000 //in ms
 #define PERIOD_TO_SHOW_SERIAL_REPORTS 60
+#define MAX_WET_PERCENTAGE 100
 
 #define DEBUG_ON
 
@@ -35,9 +36,6 @@
 #define RELAY_ON 0
 #define RELAY_OFF 1
 
-//
-//extern unsigned long period_to_turn_pump_on;
-//extern unsigned long period_to_turn_pump_off;
 extern unsigned long last_pump_status_change;
 extern unsigned long current_time;
 
@@ -68,11 +66,12 @@ typedef struct timers_type
 extern process_flags_type process_flags;
 extern sensors_type connected_sensors;
 
-
 bool processPump();
 bool isDark();
+bool isWet();
 void processSoil();
 void processReports();
+
 
 void unrecognized(const char *command);
 void LED_on();

@@ -18,11 +18,10 @@ typedef struct {
 
 extern const config_type config_in_progmem PROGMEM;		// dane w pami�ci FLASH
 extern config_type config_in_eeprom EEMEM;		// dane w pami�ci EEPROM
-extern config_type config;		// dane w pami�ci RAM
+extern config_type config_in_ram;		// dane w pami�ci RAM
 
 extern void load_default_config( void );
-
-void load_config( void );
+extern void load_config( void );
 void copy_eem_to_ram( void );
 void copy_ram_to_eem( void );
 void copy_pgm_to_ram( void );

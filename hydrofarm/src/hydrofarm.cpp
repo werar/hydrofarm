@@ -49,15 +49,12 @@
 #endif
 
 unsigned long last_run_pm=0;
-//unsigned long period_to_turn_pump_on=PERIOD_TO_TURN_PUMP_ON;
-//unsigned long period_to_turn_pump_off=PERIOD_TO_TURN_PUMP_OFF;
 unsigned long last_pump_status_change=0;
 unsigned long current_time;
 
 process_flags_type process_flags;
 sensors_type connected_sensors;
 volatile timers_type timers;
-
 
 /**
 The pump can be
@@ -66,13 +63,10 @@ The pump can be
 boolean processPump()
 {
   if(!process_flags.pump_enabled) return false;
-  if(isDark())
-  {
-      return false;
-  }
+
   if(process_flags.pump_is_on)
   {
-    if(current_time>=last_pump_status_change+config.period_to_turn_pump_on)
+    if(current_time>=last_pump_status_change+config_in_ram.period_to_turn_pump_on)
     {
       turnPumpOff();
       last_pump_status_change=current_time;
@@ -80,8 +74,16 @@ boolean processPump()
     }
   }else
   {
-   if(current_time>=last_pump_status_change+config.period_to_turn_pump_off)
+   if(current_time>=last_pump_status_change+config_in_ram.period_to_turn_pump_off)
     {
+      if(isWet())
+      {
+          //return false;//TODO: soil measurment is non stable still!
+      }
+      if(isDark())
+      {
+          return false;
+      }
       turnPumpOn();
       last_pump_status_change=current_time;
       process_flags.pump_is_on=true;
@@ -89,12 +91,12 @@ boolean processPump()
   }
   #if TM1637_MODULE
     //DEBUG_PRINTLN((last_pump_status_change+(process_flags.pump_is_on?period_to_turn_pump_on:period_to_turn_pump_off)-current_time)/1000);
-    show_time_on_LED((last_pump_status_change+(process_flags.pump_is_on?config.period_to_turn_pump_on:config.period_to_turn_pump_off)-current_time)/1000);
+    show_time_on_LED((last_pump_status_change+(process_flags.pump_is_on?config_in_ram.period_to_turn_pump_on:config_in_ram.period_to_turn_pump_off)-current_time)/1000);
   #endif
   return true;
 }
 
-boolean isDark()
+bool isDark()
 {
   #if LIGHT_SENSOR_MODULE
   /*** If the night is comming to avoid running noisy pump lets disable it. What if some lamp will be enabled or a day will be quite dark. This is not perfect solution*/
@@ -111,9 +113,20 @@ boolean isDark()
   #endif
 }
 
+bool isWet()
+{
+  uint8_t soil_percentage = measureSoilPercentage();
+  if(soil_percentage>=MAX_WET_PERCENTAGE)
+  {
+    return true;
+  }else
+  {
+    return false;
+  }
+}
+
 int processManager()
 {
-  //DEBUG_PRINTLN(F("in process Manager"));
   //pump manager
   processPump();
   #if SOIL_MODULE
@@ -135,6 +148,10 @@ void processReports()
     if(isDark())
     {
       Serial.println("Is to dark");
+    }
+    if(isWet())
+    {
+      Serial.println("Is to wet");
     }
     #if WATER_FLOW_MODULE
     calculateWaterFlowRate();
@@ -180,7 +197,8 @@ void setup()
   Serial.begin(9600); //for BLUETOOTH HC6
   //Serial.println("AT+BAUD8"); //http://42bots.com/tutorials/hc-06-bluetooth-module-datasheet-and-configuration-with-arduino/
   //Serial.begin(115200);
-  load_default_config(); //load_config(); //TODO: add mechanism writtin settings via serial console
+
+
   pinMode(PUMP_MOTOR_PIN, OUTPUT);
   process_flags.pump_is_on=false;
   #if TM1637_MODULE
@@ -197,13 +215,19 @@ void setup()
   #if SOIL_MODULE
   initSoil();
   #endif
-  pinMode(13, OUTPUT);
+  pinMode(13, OUTPUT); //TODO magic number!
   addSerialCommands();
+
+  load_default_config();
+  //load_config();
+  //copy_eem_to_ram();
+  Serial.println("Time off / Time on ");
+  Serial.println(config_in_ram.period_to_turn_pump_off);
+  Serial.println(config_in_ram.period_to_turn_pump_on);
   process_flags.pump_enabled=true;
   turnPumpOff();
   process_flags.pump_is_on=false;
   timers.counter_to_show_reports=timers.count_to_show_reports;
-
   initTimers();
 
 }

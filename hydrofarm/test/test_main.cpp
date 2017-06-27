@@ -25,6 +25,14 @@ void test_led_state_low(void) {
     TEST_ASSERT_EQUAL(digitalRead(LED_BUILTIN), LOW);
 }
 
+void test_eeprom(void)
+{
+  #include "config.h"
+  config_type config_bkp;
+  config_type config_in_eeprom EEMEM;
+  eeprom_read_block( &config_bkp, &config_in_eeprom, sizeof(config_bkp) );
+}
+
 void setup() {
     // NOTE!!! Wait for >2 secs
     // if board doesn't support software reset via Serial.DTR/RTS
@@ -42,13 +50,15 @@ uint8_t max_blinks = 5;
 void loop() {
     if (i < max_blinks)
     {
-        RUN_TEST(test_led_state_high);
-        delay(500);
-        RUN_TEST(test_led_state_low);
+        //RUN_TEST(test_led_state_high);
+        //delay(500);
+        //RUN_TEST(test_led_state_low);
         delay(500);
         i++;
     }
     else if (i == max_blinks) {
+
+      test_eeprom(;
       UNITY_END(); // stop unit testing
     }
 }

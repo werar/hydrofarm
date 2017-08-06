@@ -25,6 +25,8 @@
  * version 2 as published by the Free Software Foundation.
  */
  //TODO: use used variable convention
+ //TODO: revrite a way of measurement https://github.com/ReiniervdL/Vinduino/blob/master/Vinduino-H_V3.1/Vinduino-H_V3.1.ino
+
 
 #include <math.h>       // Conversion equation from resistance to %
 #include "soil.h"

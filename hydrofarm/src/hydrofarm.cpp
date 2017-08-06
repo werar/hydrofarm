@@ -1,11 +1,3 @@
-#include <Arduino.h>
-#ifndef UNIT_TEST  // IMPORTANT LINE!
-#include "hydrofarm.h"
-#include "pump.h"
-#include "serialConsole.h"
-#include "eepromActions.h"
-#include "soil.h"
-
 /**
  * Software to control small hydrophonics farm
  *
@@ -16,6 +8,13 @@
  * TODO:
  */
 
+#include <Arduino.h>
+#ifndef UNIT_TEST  // IMPORTANT LINE!
+#include "hydrofarm.h"
+#include "pump.h"
+#include "serialConsole.h"
+#include "eepromActions.h"
+#include "soil.h"
 
 #if NRF_MODULE
 #include "nrf.h"
@@ -219,10 +218,10 @@ void initTimers()
   TCCR1A = 0;
   TCCR1B = 0;
   TCNT1  = 0;
-
   TCCR1A |= (1<<WGM12); //CTC mode timer1
-  TCCR1B |= (1<<CS12)|(1<<CS10); //prescalerclk/1024
-  OCR1A = 7812; //(target time) = (timer resolution) * (# timer counts + 1)  //TODO: not sure if that is 1 sec
+  TCCR1B |= (1<<CS11)|(1<<CS10); //prescaler64
+  // 1 Hz (80000/((1249+1)*64))
+  OCR1A = 1249; //(target time) = (timer resolution) * (# timer counts + 1)
   TIMSK1 |= (1<<OCIE1A);
   sei();
 }

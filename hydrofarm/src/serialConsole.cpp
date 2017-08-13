@@ -58,12 +58,11 @@ void setOnTime() {
     Serial.println(secounds);
     config_in_ram.period_to_turn_pump_on=secounds*1000;
     Serial.println("Saved to eeprom");
+    eeprom_busy_wait();
     copy_ram_to_eem();
     Serial.println(config_in_ram.period_to_turn_pump_on/1000);
   }
   else {
-    config_in_ram.period_to_turn_pump_on=999;
-    copy_eem_to_ram(); //TODO: only for tests
     Serial.println(config_in_ram.period_to_turn_pump_on/1000);
   }
 }
@@ -79,6 +78,7 @@ void setOffTime() {
     Serial.println(seconds);
     config_in_ram.period_to_turn_pump_off=seconds*1000;
     Serial.println("Saved to eeprom");
+    eeprom_busy_wait();
     copy_ram_to_eem();
   }
   else {

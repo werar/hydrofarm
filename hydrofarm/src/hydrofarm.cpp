@@ -257,9 +257,10 @@ void setup()
   pinMode(13, OUTPUT); //TODO magic number!
   addSerialCommands();
 
-  load_default_config();  //TODO: use load_config after bug fix
-  //load_config();
-  //copy_eem_to_ram();
+  //load_default_config();  //TODO: use load_config after bug fix
+  delay(100);
+  load_config();
+  copy_eem_to_ram();
   Serial.println("Time off / Time on ");
   Serial.println(config_in_ram.period_to_turn_pump_off);
   Serial.println(config_in_ram.period_to_turn_pump_on);
